@@ -1,4 +1,4 @@
-﻿import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 
 const SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "fallback-secret-key-min-32-chars-long"
@@ -11,7 +11,7 @@ export interface JWTPayload {
 }
 
 export async function signToken(payload: JWTPayload): Promise<string> {
-  return new SignJWT(payload as Record<string, unknown>)
+  return new SignJWT(payload as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
