@@ -4,6 +4,7 @@ import { verifyToken } from "@/lib/auth";
 const PUBLIC_PATHS = [
   "/login", "/register", 
   "/api/auth/login", "/api/auth/register",
+  "/api/health", // Health check
   "/admin", // Whitelist all admin UI routes
   "/api/admin" // Whitelist all admin API routes to bypass normal user auth
 ];
