@@ -6,8 +6,6 @@ import { signToken, setAuthCookie } from "@/lib/session";
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
-    console.log("Login attempt for:", email);
-    console.log("DB URL (sanitized):", process.env.DATABASE_URL?.replace(/:[^:@]+@/, ":****@"));
     if (!email || !password) {
       return NextResponse.json({ error: "Missing credentials" }, { status: 400 });
     }
@@ -26,8 +24,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error(err);
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
