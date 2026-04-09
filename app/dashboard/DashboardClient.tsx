@@ -151,9 +151,7 @@ export default function DashboardClient() {
   }
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-      <NotificationBanner />
-      <div className="mobile-stack" style={{ display: "flex", gap: "1.5rem", padding: "0 1.5rem 2rem" }}>
+    <div className="mobile-stack" style={{ display: "flex", gap: "1.5rem" }}>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1.5rem", minWidth: 0 }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -286,7 +284,6 @@ export default function DashboardClient() {
 
       {/* AI Chat Panel */}
       <AiChatPanel />
-      </div>
     </div>
   );
 }

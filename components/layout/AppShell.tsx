@@ -24,9 +24,11 @@ export default async function AppShell({ children }: { children: React.ReactNode
       <Sidebar />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <TopBar user={user} />
-        <NotificationBanner />
-        <main style={{ flex: 1, padding: "1.5rem", overflowY: "auto" }}>
-          {children}
+        <main style={{ flex: 1, padding: "1.5rem", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto", width: "100%", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            <NotificationBanner />
+            {children}
+          </div>
         </main>
       </div>
       <MobileNav />
