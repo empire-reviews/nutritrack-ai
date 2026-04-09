@@ -160,11 +160,6 @@ export default function DashboardClient() {
             <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>Track your daily progress</p>
           </div>
           <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-            {data.aiQueryCount > 0 && (
-              <div className="badge" style={{ background: "rgba(99,102,241,0.1)", color: "var(--accent)", border: "1px solid rgba(99,102,241,0.2)" }}>
-                🤖 {data.aiQueryCount} AI Inquiries
-              </div>
-            )}
             {streak > 0 && <div className="badge badge-amber">🔥 {streak} day streak</div>}
             <a href="/log" className="btn-primary">+ Log Food</a>
           </div>
