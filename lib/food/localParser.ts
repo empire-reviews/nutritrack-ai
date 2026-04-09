@@ -85,12 +85,15 @@ const FOOD_DB: FoodEntry[] = [
   { names: ["kheer", "rice kheer", "phirni"], caloriesPer100g: 130, proteinPer100g: 3.5, carbsPer100g: 20, fatPer100g: 4, fiberPer100g: 0.2, defaultServingG: 150, defaultUnit: "bowl", category: "dairy" },
   { names: ["chai", "tea", "masala chai", "doodh chai"], caloriesPer100g: 30, proteinPer100g: 1, carbsPer100g: 4, fatPer100g: 1, fiberPer100g: 0, defaultServingG: 150, defaultUnit: "cup", category: "dairy" },
 
-  // === SNACKS ===
+  // === SNACKS / NUTS ===
   { names: ["samosa", "aloo samosa"], caloriesPer100g: 262, proteinPer100g: 4, carbsPer100g: 28, fatPer100g: 15, fiberPer100g: 2, defaultServingG: 100, defaultUnit: "piece", category: "snack" },
   { names: ["pakora", "pakode", "bhajiya", "bhaji"], caloriesPer100g: 280, proteinPer100g: 5, carbsPer100g: 25, fatPer100g: 18, fiberPer100g: 2, defaultServingG: 30, defaultUnit: "piece", category: "snack" },
   { names: ["mathri", "namak pare", "namkeen"], caloriesPer100g: 450, proteinPer100g: 8, carbsPer100g: 50, fatPer100g: 24, fiberPer100g: 2, defaultServingG: 30, defaultUnit: "piece", category: "snack" },
   { names: ["biscuit", "cookie", "parle g", "marie"], caloriesPer100g: 450, proteinPer100g: 6, carbsPer100g: 70, fatPer100g: 16, fiberPer100g: 2, defaultServingG: 8, defaultUnit: "piece", category: "snack" },
   { names: ["maggi", "noodles", "instant noodles"], caloriesPer100g: 188, proteinPer100g: 4.5, carbsPer100g: 26, fatPer100g: 7.5, fiberPer100g: 1, defaultServingG: 140, defaultUnit: "plate", category: "snack" },
+  { names: ["peanut", "peanuts", "moongfali", "groundnut"], caloriesPer100g: 567, proteinPer100g: 26, carbsPer100g: 16, fatPer100g: 49, fiberPer100g: 9, defaultServingG: 28, defaultUnit: "handful", category: "snack" },
+  { names: ["almond", "almonds", "badam"], caloriesPer100g: 579, proteinPer100g: 21, carbsPer100g: 22, fatPer100g: 50, fiberPer100g: 12, defaultServingG: 28, defaultUnit: "handful", category: "snack" },
+  { names: ["cashew", "cashews", "kaju"], caloriesPer100g: 553, proteinPer100g: 18, carbsPer100g: 30, fatPer100g: 44, fiberPer100g: 3, defaultServingG: 28, defaultUnit: "handful", category: "snack" },
 
   // === FRUITS ===
   { names: ["banana", "kela", "kele"], caloriesPer100g: 89, proteinPer100g: 1.1, carbsPer100g: 23, fatPer100g: 0.3, fiberPer100g: 2.6, defaultServingG: 118, defaultUnit: "piece", category: "fruit" },
@@ -140,17 +143,23 @@ export function parseLocally(text: string): { items: { name: string; quantity: n
   const matchedFoods: string[] = [];
 
   for (const part of parts) {
-    // Extract quantity: "4 roti", "1 bowl dal", "2 egg", "200g rice"
-    const qtyMatch = part.match(/^(\d+\.?\d*)\s*/);
-    let qty = qtyMatch ? parseFloat(qtyMatch[1]) : 1;
-    let rest = qtyMatch ? part.slice(qtyMatch[0].length) : part;
-
-    // Check for gram specification: "200g rice", "100gm chicken"
-    const gramMatch = rest.match(/^(\d+)\s*(?:g|gm|grams?)\s+/i);
+    let qty = 1;
     let customGrams: number | null = null;
+    let rest = part;
+
+    // Check for gram specification: "200g rice", "50 grams of peanuts"
+    const gramMatch = part.match(/^(\d+\.?\d*)\s*(?:g|gm|grams?)\s*(?:of\s+)?/i);
     if (gramMatch) {
-      customGrams = parseInt(gramMatch[1]);
-      rest = rest.slice(gramMatch[0].length);
+      customGrams = parseFloat(gramMatch[1]);
+      qty = customGrams; // For display, quantity is the gram amount
+      rest = part.slice(gramMatch[0].length);
+    } else {
+      // Otherwise extract normal quantity: "4 roti", "1 bowl dal"
+      const qtyMatch = part.match(/^(\d+\.?\d*)\s*/);
+      if (qtyMatch) {
+        qty = parseFloat(qtyMatch[1]);
+        rest = part.slice(qtyMatch[0].length);
+      }
     }
 
     // Check for unit: "1 bowl dal", "1 plate rice", "1 cup", "1 glass", "1 katori"

@@ -262,6 +262,15 @@ PORTION SIZE RULES FOR ${country}:
 - If user says "a plate" or "a bowl", use standard ${country} portions
 - If quantity is ambiguous, assume a normal adult serving
 
+CRITICAL GRAM & QUANTITY MATH RULES:
+1. If the user specifies an EXACT weight (e.g., "50 grams of peanuts", "200g rice"):
+   - You MUST set "quantity" to that EXACT number (e.g. 50).
+   - You MUST set "unit" to "g" or "grams".
+   - You MUST set "estimatedGrams" to that EXACT number.
+   - You MUST calculate calories, protein, carbs, and fat specifically for that EXACT weight (e.g. if 100g peanuts = 567 kcal, then 50g = 283 kcal).
+   - NEVER return "quantity: 1, unit: piece" if a specific gram weight is provided!
+2. Do the math accurately before returning the JSON.
+
 Respond ONLY in valid JSON. No text before or after.`,
     prompt: `Parse this food into INDIVIDUAL items with ACCURATE nutrition based on real USDA/nutrition database values.
 
