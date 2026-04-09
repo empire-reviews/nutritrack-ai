@@ -170,32 +170,47 @@ async function callProvider(req: AIRequest, settings: AIProviderSettings): Promi
   }
 }
 
-export async function aiComplete(req: AIRequest, userSettings?: AIProviderSettings): Promise<AIResponse> {
-  const primary: AIProviderSettings = userSettings || {
-    provider: process.env.DEFAULT_AI_PROVIDER || "groq",
-    model: "llama3-70b-8192",
-    apiKey: process.env.GROQ_API_KEY,
-  };
+import { getSystemAIConfig, AIProviderConfig } from "./config";
 
-  const fallbackChain: AIProviderSettings[] = [
-    { provider: "gemini", model: "gemini-1.5-flash", apiKey: process.env.GEMINI_API_KEY },
-    { provider: "groq", model: "llama3-8b-8192", apiKey: process.env.GROQ_API_KEY },
+export async function aiComplete(req: AIRequest, _unused_userSettings?: AIProviderSettings): Promise<AIResponse> {
+  const config = await getSystemAIConfig();
+  
+  if (!config?.slots?.primary?.apiKey) {
+    console.log("[AI Service] No global AI config found. Falling back to internal heuristics.");
+  }
+
+  // Create a flattened list of providers to try (Primary -> Fallback 1 -> Fallback 2)
+  const toTry: AIProviderConfig[] = [
+    config.slots.primary,
+    config.slots.fallback1,
+    config.slots.fallback2
   ];
 
-  const toTry = [primary, ...fallbackChain.filter(f => f.provider !== primary.provider)];
+  let lastError: any = null;
 
   for (const settings of toTry) {
-    try {
-      return await callProvider(req, settings);
-    } catch (err) {
-      console.warn(`AI provider ${settings.provider} failed:`, err);
+    // Skip if not configured or missing API Key (Optional slots)
+    if (!settings.provider || !settings.apiKey || settings.apiKey.trim() === "") {
       continue;
+    }
+
+    try {
+      return await callProvider(req, {
+        provider: settings.provider,
+        model: settings.model,
+        apiKey: settings.apiKey,
+        baseUrl: settings.baseUrl
+      });
+    } catch (err) {
+      console.warn(`AI Primary/Fallback (${settings.provider}) failed:`, err);
+      lastError = err;
+      // Continue to next fallback
     }
   }
 
-  // Last resort: mock
+  // Last resort: error or mock
   return {
-    text: "I am currently unavailable. Please configure a valid AI provider in Settings.",
+    text: `AI services are currently unavailable. ${lastError ? "Last error: " + lastError.message : ""}`,
     provider: "none",
     model: "none",
     tokensUsed: 0,
@@ -281,8 +296,10 @@ JSON format (respond with ONLY this, no other text):
 export function recommendationsPrompt(profile: {
   country: string;
   goal: string;
-  remainingCalories: number;
-  remainingProtein: number;
+  consumedCalories: number;
+  targetCalories: number;
+  consumedProtein: number;
+  targetProtein: number;
   dietaryRestrictions: string[];
   medicalConditions: string[];
   cuisine: string;
@@ -293,10 +310,12 @@ export function recommendationsPrompt(profile: {
 Country: ${profile.country}
 Goal: ${profile.goal}
 Preferred Cuisine: ${profile.cuisine}
-Remaining calories today: ${profile.remainingCalories} kcal
-Remaining protein today: ${profile.remainingProtein}g
+Calories Consumed: ${profile.consumedCalories} / ${profile.targetCalories} kcal target
+Protein Consumed: ${profile.consumedProtein}g / ${profile.targetProtein}g target
 Dietary restrictions: ${profile.dietaryRestrictions.join(", ") || "none"}
 Medical conditions: ${profile.medicalConditions.join(", ") || "none"}
+
+To provide accurate tips, analyze the consumed vs target data. If they are far from their protein goal, emphasize high-protein options. Do not make up numbers.
 
 CRITICAL RULES:
 1. YOU MUST STRICTLY OBEY DIETARY RESTRICTIONS. If Vegetarian/Vegan, NEVER suggest meat/poultry/fish. 

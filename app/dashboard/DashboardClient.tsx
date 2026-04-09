@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import AiChatPanel from "@/components/ai/AiChatPanel";
+import NotificationBanner from "@/components/NotificationBanner";
 
 interface MacroTotals { calories: number; protein: number; carbs: number; fat: number; }
 interface Targets {
@@ -52,7 +53,7 @@ function MacroRing({ label, value, target, color, emoji }: { label: string; valu
 }
 
 export default function DashboardClient() {
-  const [data, setData] = useState<{ totals: MacroTotals; targets: Targets; foodLogs: FoodLog[]; mealSessions: MealSession[]; totalWater: number; streak: number; } | null>(null);
+  const [data, setData] = useState<{ totals: MacroTotals; targets: Targets; foodLogs: FoodLog[]; mealSessions: MealSession[]; totalWater: number; streak: number; aiQueryCount: number; } | null>(null);
   const [aiTip, setAiTip] = useState("");
   const [loadingTip, setLoadingTip] = useState(false);
 
@@ -64,12 +65,15 @@ export default function DashboardClient() {
     if (!data) return;
     setLoadingTip(true);
     try {
-      const remainingCal = Math.max(0, (data.targets.dailyCalorieTarget || 2000) - data.totals.calories);
-      const remainingProtein = Math.max(0, (data.targets.dailyProteinTarget || 150) - data.totals.protein);
       const res = await fetch("/api/ai/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ remainingCalories: remainingCal, remainingProtein }),
+        body: JSON.stringify({ 
+          consumedCalories: data.totals.calories, 
+          targetCalories: data.targets?.dailyCalorieTarget || 2000,
+          consumedProtein: data.totals.protein,
+          targetProtein: data.targets?.dailyProteinTarget || 150
+        }),
       });
       const d = await res.json();
       if (d.data?.toHitGoal?.summary) setAiTip(d.data.toHitGoal.summary);
@@ -77,6 +81,36 @@ export default function DashboardClient() {
     } catch { setAiTip("Configure an AI provider in Settings to get personalized tips."); }
     finally { setLoadingTip(false); }
   }
+
+  useEffect(() => {
+    if (!data) return;
+    const currentHour = new Date().getHours();
+    const t = data.targets || {};
+    const waterTarget = t.dailyWaterTargetMl || 2500;
+    const expectedWater = waterTarget * (currentHour / 24);
+
+    // Hydration Alert Logic
+    const lastAlertedWaterHour = sessionStorage.getItem(`alert_water_hour_${new Date().toDateString()}`);
+    if ((!lastAlertedWaterHour || parseInt(lastAlertedWaterHour) < currentHour) && data.totalWater < expectedWater * 0.75 && currentHour >= 8) {
+      toast("Stay hydrated! 💧", {
+        description: "You're falling behind on your water goal today. A quick glass of water would be great!",
+        duration: 5000,
+        action: { label: "Logged!", onClick: () => {} }
+      });
+      sessionStorage.setItem(`alert_water_hour_${new Date().toDateString()}`, currentHour.toString());
+    }
+
+    // Protein/Fueling Alert Logic
+    const hasAlertedFuel = sessionStorage.getItem(`alert_fuel_${new Date().toDateString()}`);
+    if (!hasAlertedFuel && currentHour >= 16 && data.totals.calories < (t.dailyCalorieTarget || 2000) * 0.4) {
+      toast("Time to fuel up? 🥗", {
+        description: "It's late afternoon and you're well below your energy target. Don't forget to eat!",
+        duration: 5000,
+        action: { label: "Logged!", onClick: () => {} }
+      });
+      sessionStorage.setItem(`alert_fuel_${new Date().toDateString()}`, "true");
+    }
+  }, [data]);
 
   if (!data) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "50vh" }}>
@@ -104,16 +138,35 @@ export default function DashboardClient() {
     toast.success("Removed");
   }
 
+  // Dynamic Water Icon Calculation
+  const currentHour = new Date().getHours();
+  let waterEmoji = "💧";
+  const waterTarget = t.dailyWaterTargetMl || 2500;
+  const expectedWater = waterTarget * (currentHour / 24);
+  
+  if (totalWater < expectedWater * 0.4) {
+    waterEmoji = "🥵"; // very behind schedule
+  } else if (totalWater < expectedWater * 0.75) {
+    waterEmoji = "🏜️"; // slightly behind schedule
+  }
+
   return (
-    <div style={{ display: "flex", gap: "1.5rem", maxWidth: "1200px" }}>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+    <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      <NotificationBanner />
+      <div className="mobile-stack" style={{ display: "flex", gap: "1.5rem", padding: "0 1.5rem 2rem" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1.5rem", minWidth: 0 }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Today&apos;s Dashboard</h1>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>Track your daily progress</p>
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+            {data.aiQueryCount > 0 && (
+              <div className="badge" style={{ background: "rgba(99,102,241,0.1)", color: "var(--accent)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                🤖 {data.aiQueryCount} AI Inquiries
+              </div>
+            )}
             {streak > 0 && <div className="badge badge-amber">🔥 {streak} day streak</div>}
             <a href="/log" className="btn-primary">+ Log Food</a>
           </div>
@@ -125,18 +178,18 @@ export default function DashboardClient() {
           <MacroCard label="Protein" value={totals.protein} target={t.dailyProteinTarget || 150} unit="g" color="#22c55e" />
           <MacroCard label="Carbs" value={totals.carbs} target={t.dailyCarbTarget || 250} unit="g" color="#f59e0b" />
           <MacroCard label="Fat" value={totals.fat} target={t.dailyFatTarget || 65} unit="g" color="#ef4444" />
-          <MacroCard label="Water" value={totalWater} target={t.dailyWaterTargetMl || 2500} unit=" ml" color="#06b6d4" />
+          <MacroCard label="Water" value={totalWater} target={waterTarget} unit=" ml" color="#06b6d4" />
         </div>
 
         {/* Macro Rings */}
         <div className="card">
           <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1.25rem" }}>Daily Goal Progress</h2>
-          <div style={{ display: "flex", gap: "2rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="mobile-grid-1" style={{ display: "flex", gap: "1.5rem", justifyContent: "center", flexWrap: "wrap" }}>
             <MacroRing label="Calories" value={totals.calories} target={t.dailyCalorieTarget || 2000} color="#3b82f6" emoji="🔥" />
             <MacroRing label="Protein" value={totals.protein} target={t.dailyProteinTarget || 150} color="#22c55e" emoji="💪" />
             <MacroRing label="Carbs" value={totals.carbs} target={t.dailyCarbTarget || 250} color="#f59e0b" emoji="🌾" />
             <MacroRing label="Fat" value={totals.fat} target={t.dailyFatTarget || 65} color="#ef4444" emoji="🥑" />
-            <MacroRing label="Water" value={totalWater} target={t.dailyWaterTargetMl || 2500} color="#06b6d4" emoji="💧" />
+            <MacroRing label="Water" value={totalWater} target={waterTarget} color="#06b6d4" emoji={waterEmoji} />
           </div>
         </div>
 
@@ -233,6 +286,7 @@ export default function DashboardClient() {
 
       {/* AI Chat Panel */}
       <AiChatPanel />
+      </div>
     </div>
   );
 }

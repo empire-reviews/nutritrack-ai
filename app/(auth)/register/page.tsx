@@ -1,9 +1,11 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { COUNTRIES } from "@/lib/countries";
+
+import PasswordField from "@/components/ui/PasswordField";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -55,16 +57,20 @@ export default function RegisterPage() {
                 {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-            <div>
-              <label className="label">Password</label>
-              <input className="input" type="password" placeholder="Min 8 characters" value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required />
-            </div>
-            <div>
-              <label className="label">Confirm Password</label>
-              <input className="input" type="password" placeholder="Repeat password" value={form.confirmPassword}
-                onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} required />
-            </div>
+            <PasswordField 
+              label="Password" 
+              placeholder="Min 8 characters" 
+              value={form.password}
+              onChange={e => setForm(f => ({ ...f, password: e.target.value }))} 
+              required 
+            />
+            <PasswordField 
+              label="Confirm Password" 
+              placeholder="Repeat password" 
+              value={form.confirmPassword}
+              onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} 
+              required 
+            />
             <button className="btn-primary" type="submit" disabled={loading} style={{ width: "100%", justifyContent: "center", padding: "0.75rem", marginTop: "0.5rem" }}>
               {loading ? "Creating account..." : "Create Free Account"}
             </button>

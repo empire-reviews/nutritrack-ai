@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { aiComplete } from "@/lib/ai/aiService";
+import { logAIUsage } from "@/lib/ai/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,6 +58,8 @@ CRITICAL Rules:
       model: aiSettings.model,
       apiKey: aiSettings.apiKeyEncrypted || undefined,
     } : undefined);
+
+    await logAIUsage(session.userId, aiResp.provider, aiResp.tokensUsed);
 
     return NextResponse.json({ reply: aiResp.text, provider: aiResp.provider });
   } catch (err) {

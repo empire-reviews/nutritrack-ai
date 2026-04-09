@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 
+import PasswordField from "@/components/ui/PasswordField";
+
 export default function AdminLoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -36,11 +38,13 @@ export default function AdminLoginPage() {
         </div>
         <div className="card" style={{ padding: "2rem" }}>
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div>
-              <label className="label">Master Password</label>
-              <input className="input" type="password" placeholder="••••••••" value={password}
-                onChange={e => setPassword(e.target.value)} required />
-            </div>
+            <PasswordField 
+              label="Master Password" 
+              placeholder="••••••••" 
+              value={password}
+              onChange={e => setPassword(e.target.value)} 
+              required 
+            />
             <button className="btn-primary" type="submit" disabled={loading} style={{ width: "100%", justifyContent: "center", padding: "0.75rem", marginTop: "0.5rem", background: "var(--red)" }}>
               {loading ? "Authenticating..." : "Access Dashboard"}
             </button>

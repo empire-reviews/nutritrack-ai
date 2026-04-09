@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
 
 export default function SettingsClient() {
@@ -8,7 +8,6 @@ export default function SettingsClient() {
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         {[
           { href: "/profile", icon: "👤", label: "Profile", desc: "Update your personal info and nutrition targets" },
-          { href: "/settings/ai", icon: "🤖", label: "AI Provider Settings", desc: "Configure which AI powers your analysis" },
           { href: "/onboarding", icon: "🔄", label: "Redo Onboarding", desc: "Update your goals and recalculate targets" },
         ].map(item => (
           <Link key={item.href} href={item.href} style={{ textDecoration: "none" }}>

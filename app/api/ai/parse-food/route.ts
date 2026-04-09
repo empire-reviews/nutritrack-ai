@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { aiComplete, parseFoodPrompt } from "@/lib/ai/aiService";
 import { parseLocally } from "@/lib/food/localParser";
+import { logAIUsage } from "@/lib/ai/logger";
 
 /** Robustly extract the first valid JSON object or array from an AI response */
 function extractJSON(raw: string): unknown | null {
@@ -64,6 +65,8 @@ export async function POST(req: NextRequest) {
           apiKey: aiSettings.apiKeyEncrypted || undefined,
           baseUrl: aiSettings.baseUrl || undefined,
         } : undefined);
+
+        await logAIUsage(session.userId, aiResp.provider, aiResp.tokensUsed);
 
         const parsed = extractJSON(aiResp.text);
         if (parsed && typeof parsed === "object") {

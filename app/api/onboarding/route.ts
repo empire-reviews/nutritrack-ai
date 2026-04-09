@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { calculateAllTargets } from "@/lib/calculations";
@@ -17,7 +17,16 @@ export async function POST(req: NextRequest) {
       aiProvider, aiModel, aiApiKey,
     } = body;
 
-    const targets = calculateAllTargets({ weightKg, heightCm, age, gender, activityLevel, goal });
+    const targets = calculateAllTargets({ 
+      weightKg, 
+      heightCm, 
+      age, 
+      gender, 
+      activityLevel, 
+      goal,
+      bodyFatPercent,
+      exerciseDaysPerWeek
+    });
 
     await prisma.userProfile.upsert({
       where: { userId: session.userId },
@@ -65,26 +74,6 @@ export async function POST(req: NextRequest) {
         orderIndex: i,
       })),
     });
-
-    // Save AI settings if provided
-    if (aiProvider && aiProvider !== "skip") {
-      await prisma.aISettings.upsert({
-        where: { userId: session.userId },
-        create: {
-          userId: session.userId,
-          provider: aiProvider,
-          model: aiModel || getDefaultModel(aiProvider),
-          apiKeyEncrypted: aiApiKey || null,
-          fallbackProvider: "groq",
-          fallbackModel: "llama3-70b-8192",
-        },
-        update: {
-          provider: aiProvider,
-          model: aiModel || getDefaultModel(aiProvider),
-          apiKeyEncrypted: aiApiKey || null,
-        },
-      });
-    }
 
     await prisma.user.update({
       where: { id: session.userId },

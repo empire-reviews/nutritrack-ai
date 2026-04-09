@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -19,6 +19,12 @@ export default function WaterClient() {
     const res = await fetch("/api/water", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amountMl: ml }) });
     const d = await res.json();
     if (d.log) { setLogs(prev => [d.log, ...prev]); toast.success(`+${ml}ml logged!`); }
+  }
+
+  async function removeLog(id: string) {
+    await fetch(`/api/water?id=${id}`, { method: "DELETE" });
+    setLogs(prev => prev.filter(l => l.id !== id));
+    toast.success("Removed");
   }
 
   const total = logs.reduce((a, l) => a + l.amountMl, 0);
@@ -59,9 +65,12 @@ export default function WaterClient() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {logs.map(l => (
-              <div key={l.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", padding: "0.5rem", borderRadius: "6px", background: "var(--surface-2)" }}>
+              <div key={l.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.875rem", padding: "0.5rem 0.75rem", borderRadius: "6px", background: "var(--surface-2)" }}>
                 <span style={{ color: "#06b6d4" }}>💧 {l.amountMl}ml</span>
-                <span style={{ color: "var(--text-secondary)" }}>{new Date(l.loggedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>{new Date(l.loggedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>
+                  <button onClick={() => removeLog(l.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--red)", fontSize: "1rem", padding: "0.25rem" }}>✕</button>
+                </div>
               </div>
             ))}
           </div>

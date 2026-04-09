@@ -11,7 +11,6 @@ const NAV = [
   { href: "/weight", icon: "⚖️", label: "Weight" },
   { href: "/recommendations", icon: "🥗", label: "Recommendations" },
   { href: "/settings", icon: "⚙️", label: "Settings" },
-  { href: "/settings/ai", icon: "🤖", label: "AI Settings" },
   { href: "/profile", icon: "👤", label: "Profile" },
 ];
 
@@ -20,7 +19,7 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <aside style={{
+    <aside className="hidden-mobile" style={{
       width: collapsed ? "64px" : "220px",
       minHeight: "100vh",
       background: "var(--surface)",
@@ -33,13 +32,9 @@ export default function Sidebar() {
       top: 0,
     }}>
       <div style={{ padding: "1rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "0.75rem", justifyContent: collapsed ? "center" : "space-between" }}>
-        {!collapsed && <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "1.25rem" }}>🥗</span>
-          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)" }}>NutriTrack</span>
-        </div>}
-        {collapsed && <span style={{ fontSize: "1.5rem" }}>🥗</span>}
-        <button onClick={() => setCollapsed(c => !c)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", fontSize: "1rem", padding: "0.25rem" }}>
-          {collapsed ? "→" : "←"}
+        {!collapsed && <div style={{ fontWeight: 800, fontSize: "1.2rem", letterSpacing: "-0.5px" }}>NutriTrack<span style={{ color: "var(--accent)" }}>AI</span></div>}
+        <button className="icon-btn" onClick={() => setCollapsed(!collapsed)} title="Toggle Sidebar" style={{ marginLeft: collapsed ? 0 : "auto" }}>
+          {collapsed ? "▶" : "◀"}
         </button>
       </div>
       <nav style={{ flex: 1, padding: "0.75rem 0.5rem", display: "flex", flexDirection: "column", gap: "2px" }}>

@@ -39,3 +39,26 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+
+    const log = await prisma.waterLog.findUnique({ where: { id } });
+    if (!log || log.userId !== session.userId) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    await prisma.waterLog.delete({ where: { id } });
+    
+    // Sync to DailySummary
+    const dateStr = log.loggedAt.toISOString().split("T")[0];
+    await syncDailySummary(session.userId, dateStr);
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}

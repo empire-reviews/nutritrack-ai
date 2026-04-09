@@ -4,80 +4,78 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://postgres:Rv6ty9hbLhfqwVfH@db.kaslstkuegjrdkqunxry.supabase.co:5432/postgres"
 }
 
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  passwordHash String
-  country      String    @default("US")
-  isOnboarded  Boolean   @default(false)
-  role         String    @default("user")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  profile       UserProfile?
-  foodLogs      FoodLog[]
-  weightLogs    WeightLog[]
-  waterLogs     WaterLog[]
-  mealSessions  MealSession[]
-  savedFoods    SavedFood[]
-  savedMeals    SavedMeal[]
+  id             String         @id @default(cuid())
+  name           String
+  email          String         @unique
+  passwordHash   String
+  country        String         @default("US")
+  isOnboarded    Boolean        @default(false)
+  role           String         @default("user")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  aiSettings     AISettings?
+  aiTokenUsage   AITokenUsage[]
   dailySummaries DailySummary[]
-  aiSettings    AISettings?
-  aiTokenUsage  AITokenUsage[]
-  notifications Notification[]
+  foodLogs       FoodLog[]
+  mealSessions   MealSession[]
+  notifications  Notification[]
+  savedFoods     SavedFood[]
+  savedMeals     SavedMeal[]
+  profile        UserProfile?
+  waterLogs      WaterLog[]
+  weightLogs     WeightLog[]
+  userActivities UserActivity[]
 }
 
 model UserProfile {
-  id                  String  @id @default(cuid())
-  userId              String  @unique
-  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  age                 Int     @default(25)
-  gender              String  @default("male")
-  heightCm            Float   @default(170)
-  weightKg            Float   @default(70)
+  id                  String @id @default(cuid())
+  userId              String @unique
+  age                 Int    @default(25)
+  gender              String @default("male")
+  heightCm            Float  @default(170)
+  weightKg            Float  @default(70)
   bodyFatPercent      Float?
   waistCm             Float?
-  goal                String  @default("maintain")
+  goal                String @default("maintain")
   targetWeightKg      Float?
   targetWeeks         Int?
-  activityLevel       String  @default("moderate")
-  exerciseTypes       String  @default("[]")
-  exerciseDaysPerWeek Int     @default(3)
-  dietaryRestrictions String  @default("[]")
-  medicalConditions   String  @default("[]")
-  mealCount           Int     @default(3)
-  cuisine             String  @default("general")
-  dailyCalorieTarget  Int     @default(2000)
-  dailyProteinTarget  Int     @default(150)
-  dailyCarbTarget     Int     @default(200)
-  dailyFatTarget      Int     @default(65)
-  dailyWaterTargetMl  Int     @default(2500)
+  activityLevel       String @default("moderate")
+  exerciseTypes       String @default("[]")
+  exerciseDaysPerWeek Int    @default(3)
+  dietaryRestrictions String @default("[]")
+  medicalConditions   String @default("[]")
+  mealCount           Int    @default(3)
+  cuisine             String @default("general")
+  dailyCalorieTarget  Int    @default(2000)
+  dailyProteinTarget  Int    @default(150)
+  dailyCarbTarget     Int    @default(200)
+  dailyFatTarget      Int    @default(65)
+  dailyWaterTargetMl  Int    @default(2500)
+  user                User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model MealSession {
   id            String    @id @default(cuid())
   userId        String
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name          String
   scheduledTime String    @default("08:00")
   orderIndex    Int       @default(0)
   foodLogs      FoodLog[]
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model FoodLog {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   mealSessionId String?
-  mealSession   MealSession? @relation(fields: [mealSessionId], references: [id])
   foodName      String
   brand         String?
   quantity      Float
-  unit          String      @default("g")
+  unit          String       @default("g")
   calories      Float
   protein       Float
   carbs         Float
@@ -85,66 +83,68 @@ model FoodLog {
   fiber         Float?
   sugar         Float?
   sodium        Float?
-  loggedAt      DateTime    @default(now())
-  aiParsed      Boolean     @default(false)
+  loggedAt      DateTime     @default(now())
+  aiParsed      Boolean      @default(false)
+  mealSession   MealSession? @relation(fields: [mealSessionId], references: [id])
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SavedFood {
-  id          String  @id @default(cuid())
-  userId      String
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  foodName    String
-  brand       String?
-  defaultQty  Float   @default(100)
-  unit        String  @default("g")
-  calories    Float
-  protein     Float
-  carbs       Float
-  fat         Float
-  timesUsed   Int     @default(1)
+  id         String  @id @default(cuid())
+  userId     String
+  foodName   String
+  brand      String?
+  defaultQty Float   @default(100)
+  unit       String  @default("g")
+  calories   Float
+  protein    Float
+  carbs      Float
+  fat        Float
+  timesUsed  Int     @default(1)
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SavedMeal {
-  id            String  @id @default(cuid())
+  id            String @id @default(cuid())
   userId        String
-  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   name          String
   foods         String
   totalCalories Float
   totalProtein  Float
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model WeightLog {
   id       String   @id @default(cuid())
   userId   String
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   weightKg Float
   loggedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model WaterLog {
   id       String   @id @default(cuid())
   userId   String
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   amountMl Int
   loggedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DailySummary {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date            String
-  totalCalories   Float    @default(0)
-  totalProtein    Float    @default(0)
-  totalCarbs      Float    @default(0)
-  totalFat        Float    @default(0)
-  totalWaterMl    Int      @default(0)
-  calorieGoalHit  Boolean  @default(false)
-  proteinGoalHit  Boolean  @default(false)
-  waterGoalHit    Boolean  @default(false)
-  aiSummaryText   String?
-  aiProviderUsed  String?
+  id             String  @id @default(cuid())
+  userId         String
+  date           String
+  totalCalories  Float   @default(0)
+  totalProtein   Float   @default(0)
+  totalCarbs     Float   @default(0)
+  totalFat       Float   @default(0)
+  totalWaterMl   Int     @default(0)
+  calorieGoalHit Boolean @default(false)
+  proteinGoalHit Boolean @default(false)
+  waterGoalHit   Boolean @default(false)
+  aiSummaryText  String?
+  aiProviderUsed String?
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
 }
@@ -152,30 +152,49 @@ model DailySummary {
 model AISettings {
   id               String  @id @default(cuid())
   userId           String  @unique
-  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   provider         String  @default("groq")
   model            String  @default("llama3-70b-8192")
   apiKeyEncrypted  String?
   baseUrl          String?
   fallbackProvider String  @default("gemini")
   fallbackModel    String  @default("gemini-1.5-flash")
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AITokenUsage {
-  id         String @id @default(cuid())
+  id         String   @id @default(cuid())
   userId     String
-  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   provider   String
   tokensUsed Int
   date       String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserActivity {
+  id             String   @id @default(cuid())
+  userId         String
+  date           String   // YYYY-MM-DD
+  secondsActive  Int      @default(0)
+  sessionCount   Int      @default(0)
+  lastHeartbeat  DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
 }
 
 model Notification {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      String
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SystemSetting {
+  id    String @id @default("global")
+  key   String @unique
+  value String // JSON string containing encrypted keys and config
 }

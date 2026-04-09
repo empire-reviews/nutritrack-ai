@@ -99,7 +99,7 @@ export default function OnboardingPage() {
     </div>
   );
 
-  const steps = ["Personal Info", "Health Goals", "Activity Level", "Meal Prefs", "AI Setup"];
+  const steps = ["Personal Info", "Health Goals", "Activity Level", "Meal Prefs"];
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--background)", padding: "1.5rem" }}>
@@ -264,43 +264,12 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* STEP 5 */}
-          {step === 5 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 700 }}>AI Setup (Optional)</h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>
-                Choose which AI powers your nutrition analysis. Groq is free with no credit card required.
-              </p>
-              <div>
-                <label className="label">AI Provider</label>
-                {AI_PROVIDERS.map(p => (
-                  <button key={p.value} onClick={() => update("aiProvider", p.value)} style={{
-                    display: "block", width: "100%", padding: "0.75rem 1rem", marginBottom: "0.5rem", borderRadius: "8px",
-                    border: `2px solid ${form.aiProvider === p.value ? "var(--accent)" : "var(--border)"}`,
-                    background: form.aiProvider === p.value ? "rgba(99,102,241,0.1)" : "var(--surface-2)",
-                    color: "var(--text-primary)", cursor: "pointer", textAlign: "left",
-                  }}>
-                    <div style={{ fontWeight: 500, fontSize: "0.875rem" }}>{p.label}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{p.hint}</div>
-                  </button>
-                ))}
-              </div>
-              {!["ollama","skip","localai","lmstudio"].includes(form.aiProvider) && (
-                <div>
-                  <label className="label">API Key</label>
-                  <input className="input" type="password" placeholder="Paste your API key here" value={form.aiApiKey}
-                    onChange={e => update("aiApiKey", e.target.value)} />
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Navigation */}
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2rem" }}>
             <button className="btn-secondary" onClick={() => step > 1 && setStep(s => s - 1)} disabled={step === 1}>
               ← Back
             </button>
-            {step < 5 ? (
+            {step < 4 ? (
               <button className="btn-primary" onClick={() => setStep(s => s + 1)}>Next →</button>
             ) : (
               <button className="btn-primary" onClick={finish} disabled={loading}>

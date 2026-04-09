@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useRef, useEffect } from "react";
 
 interface Message { role: "user" | "ai"; text: string; }
@@ -11,7 +11,7 @@ const QUICK = [
 ];
 
 export default function AiChatPanel() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "ai", text: "Hi! I am your AI nutritionist. Ask me anything about your nutrition, food, or health goals! 🥗" }
   ]);
@@ -40,20 +40,23 @@ export default function AiChatPanel() {
   }
 
   if (!open) return (
-    <button onClick={() => setOpen(true)} style={{
-      position: "fixed", right: "1.5rem", bottom: "1.5rem",
-      width: "52px", height: "52px", borderRadius: "50%",
+    <button onClick={() => setOpen(true)} className="animate-fade-in glow-primary float-bob" style={{
+      position: "fixed", right: "1.25rem", bottom: "5.5rem",
+      width: "56px", height: "56px", borderRadius: "50%",
       background: "var(--accent)", border: "none", cursor: "pointer",
-      fontSize: "1.3rem", boxShadow: "0 4px 20px rgba(99,102,241,0.5)",
+      fontSize: "1.4rem",
       display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 90,
+      transition: "transform 0.2s",
     }}>🤖</button>
   );
 
   return (
-    <div style={{
-      width: "340px", flexShrink: 0, display: "flex", flexDirection: "column",
+    <div className="ai-chat-drawer" style={{
+      flexShrink: 0, display: "flex", flexDirection: "column",
       background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px",
       height: "calc(100vh - 60px - 3rem)", position: "sticky", top: 0,
+      zIndex: 110,
     }}>
       <div style={{ padding: "1rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>

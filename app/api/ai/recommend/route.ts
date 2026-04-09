@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { aiComplete, recommendationsPrompt } from "@/lib/ai/aiService";
+import { logAIUsage } from "@/lib/ai/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,8 +16,10 @@ export async function POST(req: NextRequest) {
     const prompt = recommendationsPrompt({
       country: user?.country || "US",
       goal: profile?.goal || "maintain",
-      remainingCalories: body.remainingCalories || 500,
-      remainingProtein: body.remainingProtein || 50,
+      consumedCalories: body.consumedCalories || 0,
+      targetCalories: body.targetCalories || 2000,
+      consumedProtein: body.consumedProtein || 0,
+      targetProtein: body.targetProtein || 150,
       dietaryRestrictions: JSON.parse(profile?.dietaryRestrictions || "[]"),
       medicalConditions: JSON.parse(profile?.medicalConditions || "[]"),
       cuisine: profile?.cuisine || "General",
@@ -27,6 +30,8 @@ export async function POST(req: NextRequest) {
       model: aiSettings.model,
       apiKey: aiSettings.apiKeyEncrypted || undefined,
     } : undefined);
+
+    await logAIUsage(session.userId, aiResp.provider, aiResp.tokensUsed);
 
     let data;
     try {

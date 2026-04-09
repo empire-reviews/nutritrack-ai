@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 
@@ -10,20 +10,23 @@ export async function GET() {
     const start = new Date(today + "T00:00:00.000Z");
     const end = new Date(today + "T23:59:59.999Z");
 
-    const [profile, foodLogs, waterLogs, mealSessions] = await Promise.all([
-      prisma.userProfile.findUnique({ where: { userId: session.userId } }),
+    const [profile, foodLogs, waterLogs, mealSessions, aiCount] = await Promise.all([
+      prisma.userProfile.findUnique({ where: { userId: session.userId } }).catch(e => { console.error("[dashboard] profile failed:", e); return null; }),
       prisma.foodLog.findMany({
         where: { userId: session.userId, loggedAt: { gte: start, lte: end } },
         include: { mealSession: true },
         orderBy: { loggedAt: "asc" },
-      }),
+      }).catch(e => { console.error("[dashboard] foodLogs failed:", e); return []; }),
       prisma.waterLog.findMany({
         where: { userId: session.userId, loggedAt: { gte: start, lte: end } },
-      }),
+      }).catch(e => { console.error("[dashboard] waterLogs failed:", e); return []; }),
       prisma.mealSession.findMany({
         where: { userId: session.userId },
         orderBy: { orderIndex: "asc" },
-      }),
+      }).catch(e => { console.error("[dashboard] mealSessions failed:", e); return []; }),
+      prisma.aITokenUsage.count({
+        where: { userId: session.userId }
+      }).catch(e => { console.error("[dashboard] aiCount failed:", e); return 0; }),
     ]);
 
     const totals = foodLogs.reduce(
@@ -62,17 +65,34 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      totals,
-      totalWater,
-      targets: profile || {},
-      foodLogs,
-      mealSessions,
-      streak,
+      totals: totals || { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      totalWater: totalWater || 0,
+      targets: profile || { 
+        dailyCalorieTarget: 2000, 
+        dailyProteinTarget: 150, 
+        dailyCarbTarget: 250,
+        dailyFatTarget: 65,
+        dailyWaterTargetMl: 2500,
+        gender: "Prefer not to say",
+        weightKg: 70
+      },
+      foodLogs: foodLogs || [],
+      mealSessions: mealSessions || [],
+      streak: streak || 0,
+      aiQueryCount: aiCount || 0,
       date: today,
     });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    console.error("[dashboard] fatal catch:", err);
+    // Even on total failure, return a safe fallback state so the UI doesn't hang
+    return NextResponse.json({
+      totals: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      totalWater: 0,
+      targets: { dailyCalories: 2000, dailyProtein: 150 },
+      foodLogs: [],
+      mealSessions: [],
+      streak: 0,
+      date: new Date().toISOString().split("T")[0]
+    });
   }
 }
-

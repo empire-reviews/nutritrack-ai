@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -28,7 +28,8 @@ export default function TopBar({ user }: { user?: { name: string; email: string 
       top: 0,
       zIndex: 10,
     }}>
-      <div style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>{today}</div>
+      <div className="hidden-mobile" style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>{today}</div>
+      <div className="hidden-desktop" style={{ color: "var(--accent)", fontWeight: 700, fontSize: "1rem" }}>NutriTrack</div>
       <div style={{ position: "relative" }}>
         <button onClick={() => setMenuOpen(o => !o)} style={{
           display: "flex", alignItems: "center", gap: "0.5rem",

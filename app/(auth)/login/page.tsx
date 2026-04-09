@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import PasswordField from "@/components/ui/PasswordField";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -42,11 +43,13 @@ export default function LoginPage() {
               <input className="input" type="email" placeholder="you@example.com" value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
             </div>
-            <div>
-              <label className="label">Password</label>
-              <input className="input" type="password" placeholder="••••••••" value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required />
-            </div>
+            <PasswordField 
+              label="Password" 
+              placeholder="••••••••" 
+              value={form.password}
+              onChange={e => setForm(f => ({ ...f, password: e.target.value }))} 
+              required 
+            />
             <button className="btn-primary" type="submit" disabled={loading} style={{ width: "100%", justifyContent: "center", padding: "0.75rem", marginTop: "0.5rem" }}>
               {loading ? "Signing in..." : "Sign In"}
             </button>
